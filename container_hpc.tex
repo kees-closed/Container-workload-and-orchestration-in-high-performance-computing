@@ -24,7 +24,7 @@
 \author{\IEEEauthorblockN{Kees de Jong}
 \IEEEauthorblockA{\textit{SURFsara} \\
 Amsterdam, The Netherlands \\
-kees.dejong@surfsara.nl, maxim.masterov@surfsara.nl}}
+kees.dejong@surfsara.nl}}
 
 \maketitle
 
@@ -38,23 +38,173 @@ SLURM, Kubernetes, Singularity, Docker, HPC
 
 
 \section{Introduction}
+The use of containers in \gls{hpc} environments is gaining more popularity. Container technology is used to provide a uniform environment for testing and deploying applications. Due to the bundling of all application dependencies into one portable container, these applications provide seamless and continues updates on any container-supporting host. This provides more agility because the same environment that is used by developer will be used on the target system. However, adoption in \gls{hpc} has been slow due to security concerns and the specific parallel \gls{rdma} application use cases on InfiniBand networks.
 
 
-% Explain use of containers in general, then the present use in hpc, then bring up kubernetes and the main use cases (ai/microservices), then finally how slurm fits in all this
-% highlight the support for containers between kubernetes and slurm (does kubernetes support singularity?)
+\subsection{Container technologies}
+Several \gls{hpc} oriented container technologies have been developed and the pros and cons will be briefly summarized in this section \cite{hpc-workloads-justin, saha2018evaluation, stackhpc-state-of-hpc}.
 
-% subsection to highlight the differences between the container technologies; charly cloud, singularity, etc. , e.g. Charliecloud, Docker, UDOCKER, Kubernetes Pods (k8s), Shifter, Singularity, ENROOT, podman and Sarus
 
+\subsubsection{Docker}
+Docker is not an \gls{hpc} oriented container solution. The reason for that is that it is focused on sites with only trusted users. Docker requires root privileges to build and run containers, as also noted in the Docker documentation; "only trusted users should be allowed to control your Docker daemon" \cite{docker-security}. \gls{hpc} systems are in general systems where the users are not trusted with this privilege. The Docker daemon require the execution of the root user, which is considered a poor design choice in terms of security.
+
+
+\subsubsection{udocker}
+In response to the security concerns of Docker, several more security hardened alternatives were developed. E.g. udocker was developed, which is a Docker feature subset clone that is designed to allow execution of Docker commands without increased user privileges. udocker does not require any type of privileges nor the deployment of services by system administrators. It can be downloaded and executed entirely by the end user. udocker achieved this enhanced security functionality by executing containers completely in user space. Because of that, administrative functionality inside of the container is severely limited \cite{utah-udocker}.
+
+
+\subsubsection{Charliecloud}
+Charliecloud is designed to be as minimal and lightweight as possible and uses Linux user namespaces to run containers with no privileged operations or daemons and minimal configuration changes on center resources. This simple approach avoids most security risks while maintaining access to the performance and functionality already on offer. Charliecloud was not deemed stable enough for \gls{rhel} due to the dependence on kernel namespaces in 2017 \cite{kurtzer2017singularity}. However, \gls{rhel} 8 is shipped with Podman (Red Hat's own container solution), which also makes use of kernel namespaces. It does not require root privileges to install the Charliecloud software or to run Charliecloud containers.
+
+\subsubsection{Podman}
+Podman was developed by Red Hat as a root-less container solution. It is designed without the overhead and security concerns of the full Docker daemon. Currently Podman is not entirely suitable for \gls{hpc} use cases;
+\begin{itemize}
+    \item Missing support for parallel filesystems (e.g. IBM Spectrum Scale)
+    \item Rootless Podman was designed to use kernel user namespaces which is not compatible with most parallel filesystems
+    \item Not yet possible to set system site policy defaults
+    \item Pulling Docker/OCI images requires multiple subuids/subgids
+\end{itemize}
+Buildah offers a promising way to enable users to build container images as Docker/OCI images all without root privileges.
+
+
+\subsubsection{Shifter}
+Shifter is mostly backed by the \gls{nersc} and Cray. Documentation uses \gls{slurm} for job scheduling. However, instead of the \gls{oci}, Shifter uses their own format, which is reverse-compatible with the \gls{oci} format. Community support lacks for Shifter, other than the \gls{nersc} and Cray there are not many other contributors, which indicates low engagement of the \gls{hpc} community. This translates in low development activities, a pull request for better \gls{mpi} integration, which was opened in April 2017, has since stalled.
+
+
+\subsubsection{Singularity}
+One of the most popular \gls{hpc} oriented container solutions is Singularity. An estimated of 25,000+ systems are running Singularity like SURFsara, TACC, San Diego Supercomputer Center, and Oak Ridge National Laboratory. Root privileges are not required to run containers. However, root is required to build containers.
+
+Singularity uses \gls{sif} which is a single-image format, i.e. it does not use layers, like Docker. Since the \gls{oci} format supports multiple layers, they are often larger than the \gls{sif} format. \glspl{sif} are treated like a binary executable by a Linux user. However, Singularity also supports the conversion from the \gls{oci} format to \gls{sif}. Furthermore, the project enjoys active development from a broad community.
+
+
+\subsubsection{Enroot}
+Enroot can be thought of as an enhanced unprivileged chroot. It uses the same underlying technologies as containers but removes much of the isolation they inherently provide while preserving filesystem separation. This approach is generally preferred in high-performance environments or virtualized environments where portability and reproducibility is important, but extra isolation is not warranted.
+
+Enroot is also similar to other tools like proot or fakeroot but instead relies on more recent features from the Linux kernel (i.e. user and mount namespaces), and provides facilities to import well known container image formats (e.g. Docker). Furthermore, it does not require a daemon or extra process. Several advanced features include; runfiles, scriptable configs, and in-memory containers.
+
+
+\subsection{Container orchestrators}
 % subsection to highlight the high level differences between kubernetes and slurm in regards of container orchestration
+% highlight the support for containers between kubernetes and slurm (does kubernetes support singularity?)
+% Explain use of containers in general, then the present use in hpc, then bring up kubernetes and the main use cases (ai/microservices), then finally how slurm fits in all this
+
+\gls{slurm} provides the means to allocate exclusive and/or non-exclusive access to typically \gls{hpc} compute resources for a duration of time. Therefore, \gls{slurm} provides a scheduling framework for starting, executing, and monitoring (accounting) compute jobs. These are typically parallel \gls{mpi} jobs on a set of scheduled compute nodes, or parallel OpenMP jobs on a single scheduled compute node. \gls{slurm} also provides the intelligence to manage queues and thus congestion of the compute resources. The \gls{hpc} use case consist of parallel compute jobs with a defined, relative short, lifespan. \gls{slurm} is generally agnostic to container technologies and can be made to start most, if not all types since version xyz. 
+
+Kubernetes provides portability, ease of administration, high availability, integrability, and monitoring capabilities for container orchestration. While \gls{hpc} workload managers are focused on running distributed memory jobs and support high-throughput scenarios, Kubernetes is primarily built for orchestrating containerized microservice applications. These microservices require resilience which Kubernetes provides with load-balancing and redundancy features, in order to provide maximum availability over a relative long lifespan. Where microservices are updated and maintained while in production \cite{hpc-kubernetes-containers}.
+% TODO: highlight the importance of the overlay network in kubernetes
+
+
+\subsection{Summary}
+In this section we have introduced the reader with the different container technologies and two orchestrators. It was pointed out that Docker is not ideal for \gls{hpc} environments since it requires trusted users. udocker showed significant progress in terms of security by running containers fully in userspace, however, this limited its functionality. Charliecloud is a secure container solution with a small attack surface due to its lightweight nature. Charlycloud also does not require root privileges to run or install a container. Podman shows much promise due to its ability to also run and execute containers without root privileges and much overhead. However, Podman but lacks the \gls{hpc} oriented features, for now. Shifter lacks community support and its current development activities are too low to pursue it further. Singularity is a secure and very popular container solution, however, building Singularity containers requires root privileges. Enroot has a different approach, the project mixes different isolation methods, while staying lightweight, with builtin GPU support. Figure \ref{fig:container-tech} illustrates the weaknesses and strengths several of the discussed container technologies \cite{nvidia-slurm-containers}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{images/container_tech.png}
+\caption{Container technology comparison}
+\label{fig:container-tech}
+\end{figure}
+
+The two container orchestrators discussed in this section can be summarized as follows. \gls{slurm} is focused mainly on scheduling a distributed parallel compute job with a defined wall clock time. Where it is specialized in customizable efficient partitioning, queuing, monitoring (accounting) and prioritizing jobs. While Kubernetes is mainly focused on keeping microservices up and running without interruption. Where it is specialized with redundancy features where for instance a new instances of a container is spawned when failures occur (high availability). And load-balancing features between containers to prevent congestion and latency for the microservice. In Figure \ref{fig:kube_vs_slurm} are the weaknesses and strengths illustrated of \gls{slurm} and Kubernetes, however, container support has since been added, thus this illustration from nVidia is not entirely relevant anymore \cite{nvidia-slurm-containers}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{images/hpc_vs_data_science.png}
+\caption{Kubernetes versus SLURM}
+\label{fig:kube_vs_slurm}
+\end{figure}
 
 
 \section{Related work}
 % summarize kubernetes and slurm performance measurements thesis, summarize docker vs singularity performance
 % summarize the hpc articles
 % todo: find more info about slurm + container orchestration
+\subsection{Orchestrators performance}
+Futral researched the performance differences of several batch schedulers, including \gls{slurm} and Kubernetes \cite{futral2019method}. The research's measurements that were taken during the experiments were wall time, RAM usage, and CPU usage. These measurements captured the utilization of system resources of each of the schedulers. The custom scripts, using the NASA Parallel Benchmark programs and computational fluid dynamics, which were executed using, 1, 2, and 4 servers to determine how well a scheduler scales with network growth. All hardware was similar and was co-located within the same data-center.
+
+Kubernetes needs to be determined if Weave-Net is the appropriate network plugin for the cluster
+Kubernetes did not perform well was that the worker pods had to be first provisioned
+before a controller pod could be provisioned via the batch job. The batch job then had to
+perform a DNS lookup of the worker pods and then it would be forced to wait till the
+worker pods were available.
+Kubernetes is very memory intensive and consumes the most RAM.
+The Kubernetes cluster also suffers from utilizing SSH for its communication protocol.
+In addition to SSH, our Kubernetes setup also relies on a virtual network and custom
+dynamic DNS solutions to determine worker node availability. The added layer of the
+virtual network and the DNS lookups significantly affects its performance.
+
+
+Slurm Workload Manager out of the box does not appear to require any optimizations.
+Any optimizations would be in terms of additional configuration of the supporting
+OpenMPI libraries themselves.
+
+
+
+While Kubernetes does provide some batch job facilities, ease of development, and process isolation; it did not perform as well as expected overall. In conclusion, the data that was collected suggests that most batch schedulers are uniquely tuned to improve performance of high-performance compute jobs. This advanced tuning is especially pronounced in Slurm Workload Manager and Portable Batch Scheduler.
+
+
+\subsection{Container performance}
+Containerization technology has gained significant traction in re-
+cent years. Containers are the appropriate tool for software de-
+velopment landscape that has adopted microservices and DevOps.
+Containers have several well known benefits for use in cloud envi-
+ronments: (1) support for a uniform environment for testing and
+deploying applications; (2) seamless and continuous updates of
+microservices; and (3) agility to support different languages and
+deployment platforms.
+
+When containers were initially adopted for micro-services based
+architectures in the industry, they did not attract the attention of
+HPC community wherein the focus is primarily on MPI applications
+for large parallel tasks. Containers were also initially shunned
+due to reports of possible root escalation vulnerabilities. However,
+the growing list of features along with the potential to provide
+high performance, along with portability and reproducibility from
+development to production environment, has made it critical to
+evaluate current container technologies for HPC applications in
+the cloud.
+
+Singularity is designed to use the underlying HPC runtime en-
+vironment for executing MPI applications, whereas Docker is de-
+signed to isolate the runtime environment from the host. Also,
+Singularity focuses on coarse-grained resource allocation whereas
+Docker can take advantage of the fine-grained allocation of re-
+sources per rank.
+
+HPC centers and academic clusters currently do not widely sup-
+port Docker due to reports of security concerns that root escalation
+is possible. However, this vulnerability is not a concern in cloud
+allocations wherein users have root privileges to run their appli-
+cations and other security modules provide separation between
+different allocations. As containers keep expanding support for run-
+ning HPC tasks in the cloud, it is critical to quantify the impact on
+performance, support for orchestration and scheduling/placement
+of containers on the resources.
+
+Docker has gained widespread acceptance in the re-
+cent years as can be seen by the support in resource managers
+and orchestration frameworks like Apache Mesos and Kubernetes.
+Another container technlogy that has gained the attention of the
+community is Singularity. It has been developed for scientific appli-
+cations keeping the HPC eco-system as the focus. In the following
+subsections, we introduce these container mechanisms and their
+associated capabilities.
+
+
 
 \section{Research question}
+% For Kubernetes, for example it needs to be determined if Weave-Net is the appropriate network plugin for the cluster. A
+% comparison of network plugins for Kubernetes in conjunction with OpenMPI would be a
+% great point of future research. Another way that Kubernetes cluster could be optimized is
+% by moving from SSH to RSH for fenced networks. This same optimization could be
+% applied to Beowulf clusters as well.
 
+% Another way that Kubernetes cluster could be optimized is
+% by moving from SSH to RSH for fenced networks.
+
+% One additional optimization for Kubernetes would be to create a static, custom pod as the
+% front-end node. Once the custom pod is provisioned then the batch job would select the
+% front-end node instead of creating new pods each time. Provisioning all pods including
+% the front-end pod ahead-of-time would eliminate most of the startup time.
 
 \section{Scope}
 % discuss the abstract experimentation methods
@@ -71,6 +221,11 @@ SLURM, Kubernetes, Singularity, Docker, HPC
 \newacronym{hpc}{HPC}{High Performance Computing}
 \newacronym{mpi}{MPI}{Message Passing Interface}
 \newacronym{cola}{COLA}{Customer Organisation LDAP Accounting Service}
+\newacronym{rdma}{RDMA}{Remote Direct Memory Access}
+\newacronym{rhel}{RHEL}{Red Hat Enterprise Linux}
+\newacronym{oci}{OCI}{Open Containers Initiative}
+\newacronym{nersc}{NERSC}{National Energy Research Scientific Computing Center}
+\newacronym{sif}{SIF}{Singularity Image Format}
 
 
 \bibliographystyle{./bibliography/IEEEtran}
