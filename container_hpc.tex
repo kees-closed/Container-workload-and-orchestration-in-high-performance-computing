@@ -1,0 +1,79 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{footnote}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{minted}
+% \usepackage{todonotes}
+\usepackage{url}[hyphens]
+\usepackage[acronym, nonumberlist]{glossaries}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Container workload and orchestration in high performance computing}
+
+\author{\IEEEauthorblockN{Kees de Jong}
+\IEEEauthorblockA{\textit{SURFsara} \\
+Amsterdam, The Netherlands \\
+kees.dejong@surfsara.nl, maxim.masterov@surfsara.nl}}
+
+\maketitle
+
+\begin{abstract}
+In e.g. federated \gls{hpc} infrastructures it is a challenge to maintain predictable software environments. Container technology offers the portability needed to keep work environments across different infrastructures consistent. Several container technologies have been developed. With container technology there is also the question of orchestration. How, where and when are these containers deployed in a  (federated) cluster? \gls{slurm} is a resource manager that is used to schedule \gls{hpc} workloads and is used in about 60\% of the \gls{hpc} infrastructures in the TOP500\footnote{\url{https://hpcc.usc.edu/support/documentation/slurm/}}. With \gls{slurm} xyz, container support was added, allowing the scheduling of HPC workloads in containers. In Cloud environments, Kubernetes is a popular container scheduler/orchestrator. This research will investigate the pros and cons of several \gls{hpc} oriented container solutions. Furthermore, \gls{slurm} and Kubernetes will be evaluated as container schedulers \cite{cartesius-userinfo}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+SLURM, Kubernetes, Singularity, Docker, HPC
+\end{IEEEkeywords}
+
+
+\section{Introduction}
+
+
+% Explain use of containers in general, then the present use in hpc, then bring up kubernetes and the main use cases (ai/microservices), then finally how slurm fits in all this
+% highlight the support for containers between kubernetes and slurm (does kubernetes support singularity?)
+
+% subsection to highlight the differences between the container technologies; charly cloud, singularity, etc. , e.g. Charliecloud, Docker, UDOCKER, Kubernetes Pods (k8s), Shifter, Singularity, ENROOT, podman and Sarus
+
+% subsection to highlight the high level differences between kubernetes and slurm in regards of container orchestration
+
+
+\section{Related work}
+% summarize kubernetes and slurm performance measurements thesis, summarize docker vs singularity performance
+% summarize the hpc articles
+% todo: find more info about slurm + container orchestration
+
+\section{Research question}
+
+
+\section{Scope}
+% discuss the abstract experimentation methods
+% define what needs to be done to answer the research question
+
+
+\section{Planning}
+% think of something realistic
+
+
+
+\newacronym{slurm}{SLURM}{Simple Linux Utility for Resource Management}
+\newacronym{cca}{CCA}{Central Converged Architecture}
+\newacronym{hpc}{HPC}{High Performance Computing}
+\newacronym{mpi}{MPI}{Message Passing Interface}
+\newacronym{cola}{COLA}{Customer Organisation LDAP Accounting Service}
+
+
+\bibliographystyle{./bibliography/IEEEtran}
+\bibliography{./bibliography/IEEEabrv,./bibliography/IEEEexample}
+
+\end{document}
