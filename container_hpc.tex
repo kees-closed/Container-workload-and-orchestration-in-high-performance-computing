@@ -38,6 +38,7 @@ SLURM, Kubernetes, Singularity, Docker, HPC
 
 
 \section{Introduction}
+\label{introduction}
 The use of containers in \gls{hpc} environments is gaining more popularity. Container technology is used to provide a uniform environment for testing and deploying applications. Due to the bundling of all application dependencies into one portable container, these applications provide seamless and continues updates on any container-supporting host. This provides more agility because the same environment that is used by a developer will be used on the target system. However, adoption in \gls{hpc} has been slow due to security concerns and the specific parallel \gls{rdma} application use cases on InfiniBand networks.
 
 
@@ -95,7 +96,7 @@ Enroot is also similar to other tools like proot or fakeroot but instead relies 
 \gls{slurm} provides the means to allocate exclusive and/or non-exclusive access to typically \gls{hpc} compute resources for a duration of time. Therefore, \gls{slurm} provides a scheduling framework for starting, executing, accounting and monitoring compute jobs. These are typically parallel \gls{mpi} jobs on a set of scheduled compute nodes, or parallel OpenMP jobs on a single scheduled compute node. \gls{slurm} also provides the intelligence to manage queues and thus congestion of the compute resources. \gls{slurm} is also topology-aware, which is the intelligence to schedule jobs on nodes close together in the \gls{hpc} cluster in order to keep latency low. The \gls{hpc} use case consists of parallel compute jobs with a defined, relative short runtime. \gls{slurm} is generally agnostic towards container technologies and start most, if not all.
 
 \subsubsection{Kubernetes}
-Kubernetes has risen to the top in the challenge to provide orchestration and management for containerized software components due to its rich ecosystem and scaling properties. Kubernetes provides portability, ease of administration, high availability, integrability, and monitoring capabilities for container orchestration. While \gls{hpc} workload managers are focused on running distributed memory jobs and support high-throughput scenarios, Kubernetes is primarily built for orchestrating containerized microservice applications and has grown popular in e.g. Cloud-native workloads, high-throughput computing and data analytics workflows. These microservices require resilience, which Kubernetes provides with load-balancing and redundancy features. In order to provide the maximum availability over a relative long lifespan,  microservices are updated and maintained while in production \cite{hpc-kubernetes-containers}, in contrast to \gls{hpc} jobs which have a relative short and static lifespan.
+Kubernetes has risen to the top in the challenge to provide orchestration and management for containerized software components due to its rich ecosystem and scaling properties. Kubernetes provides portability, ease of administration, high availability, integrability, and monitoring capabilities for container orchestration. While \gls{hpc} workload managers are focused on running distributed memory jobs and support high-throughput scenarios, Kubernetes is primarily built for orchestrating containerized microservice applications and has grown popular in e.g. Cloud-native workloads, high-throughput computing and data analytics workflows. These microservices require resilience, which Kubernetes may provide with load-balancing and redundancy features. In order to provide the maximum availability over a relative long lifespan,  microservices are updated and maintained while in production \cite{hpc-kubernetes-containers}, in contrast to \gls{hpc} jobs which have a relative short and static lifespan.
 
 
 
@@ -109,16 +110,7 @@ Kubernetes has risen to the top in the challenge to provide orchestration and ma
 \subsection{Summary}
 In this section we have introduced the reader with the different container technologies and two orchestrators. It was pointed out that Docker is not ideal for \gls{hpc} environments since it requires trusted users. udocker showed significant progress in terms of security by running containers fully in userspace, however, this limited its functionality. Charliecloud is a secure container solution with a small attack surface due to its lightweight nature. Charliecloud also does not require root privileges to build and run a container. Podman shows much promise due to its ability to also build and run containers without root privileges and much overhead. However, at the time of writing this report, Podman lacks the \gls{hpc} oriented features. Shifter lacks community support and its current development activities are too low to pursue it further. Singularity is a secure and very popular container solution which allows to build and run containers without root. Enroot has a different approach, the project mixes different isolation methods, while staying lightweight, with builtin GPU support.
 
-% Figure \ref{fig:container-tech} was taken from the proceedings of the \gls{slug} meeting in 2019 and illustrates the weaknesses and strengths of several of the discussed container technologies \cite{nvidia-slurm-containers}.
-
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=\columnwidth]{images/container_tech.png}
-% \caption{Container technology comparison}
-% \label{fig:container-tech}
-% \end{figure}
-
-The two container orchestrators discussed in this section can be summarized as follows. \gls{slurm} is focused mainly on scheduling a distributed parallel compute job with a defined wall clock time. Where it is specialized in customizable efficient partitioning, queuing, accounting, monitoring and prioritizing jobs while being topology-aware. While Kubernetes is mainly focused on keeping microservices up and running without interruption. Where it is specialized with redundancy features where for instance a new instances of a container is spawned when failures occur (high availability). And load-balancing features between containers to prevent congestion and latency for the microservice. There are developments towards support for HPC workflows. However, Kubernetes still lacks the features to fully support these HPC workflows on an equivalent level as \gls{slurm}.
+The two container orchestrators discussed in this section can be summarized as follows. \gls{slurm} is focused mainly on scheduling a distributed parallel compute job with a defined wall clock time. Where it is specialized in customizable efficient partitioning, queuing, accounting, monitoring and prioritizing jobs while being topology-aware. While Kubernetes is mainly focused on keeping microservices up and running without interruption. Where it is specialized with redundancy features where for instance a new instance of a container is spawned when failures occur (high availability). And load-balancing features between containers to mitigate congestion and latency for the microservice. There are developments towards support for HPC workflows. However, Kubernetes still lacks the features to fully support these HPC workflows on an equivalent level as \gls{slurm}.
 
 % Figure \ref{fig:kube_vs_slurm} was taken from the proceedings of the \gls{slug} meeting in 2019 and illustrates the weaknesses and strengths of \gls{slurm} and Kubernetes, however, container support has since been added to \gls{slurm}, thus this illustration from nVidia is as of writing this report not entirely up to date anymore \cite{nvidia-slurm-containers}.
 
@@ -154,56 +146,92 @@ The following research questions are formulated and tested. How do these contain
 
 
 \section{Method}
-In order to answer the research question from section \ref{research-question}, we tested \todo{maxim: define jobs and what they test} x, y, z jobs on single and multi node jobs and measured the performance x times. These performance metrics were visualized in box plots to demonstrate the performance stability compared to bare metal performance. Furthermore, the usability, security and features of the container technologies were visualized in spider graphs. We did not setup a Kubernetes cluster due to the sufficient related work available. The evaluation of Kubernetes and \gls{slurm} was a literature study of which the results were also visualized in spider graphs. These spider graphs of the container technologies and container orchestrators visualize the pros and cons of each solution. 
+In order to answer the research question from section \ref{research-question}, we tested three linear solvers from PETSc library \cite{PETSc2020overview} on standard 3D Poisson problem with 7-point stencil and $500^3$ Degrees of Freedom (DoF). The chosen linear solver are: CG, BiCGSStab and ML. Every test was executed on 1, 2 and 4 nodes with 24 MPI tasks per node. To determine the deviation of the performance, every test was repeated four times. Table \ref{tab:lib_verions} shows versions of the libraries and compilers used during the tests on the host machine and in containers.
+\begin{table}[]
+    \centering
+    \begin{tabular}{c c c}
+        \hline
+                & Host machine & Container \\ \hline
+        OS      & RHEL7.8      & Ubuntu-18.04.4 LTS \\
+        GGG     & 7.3.0        & 7.5.0 \\
+        OpenMPI & 3.1.1        & 3.1.1 \\
+        PETSc   & 3.11.2       & 3.11.4 \\ \\
+    \end{tabular}
+    \caption{Versions of the compilers and libraries used on the host machine and in the containers during the tests.}
+    \label{tab:lib_verions}
+\end{table}
+
+The performance metrics were visualized in box plots to demonstrate the performance stability compared to bare metal performance. Furthermore, the usability, security and \gls{hpc} features of the container technologies were visualized in spider graphs. We did not setup a Kubernetes cluster due to the sufficient related work available. The evaluation of Kubernetes and \gls{slurm} was a literature study of which the results were also visualized in spider graphs. These spider graphs of the container technologies and container orchestrators visualize the pros and cons of each solution. 
 
 
 \section{Results}
 In this section the container benchmark results are evaluated. The container orchestrators are evaluated exclusively based on related work.
 
-\subsection{Container technologies}
-% Results discussed here
-% * What can be concluded here? Try to make it a bit more broader then "they are similar", something like; even though of the extra overhead the performance is ... bla bla
-% * by looking at the boxplots, the performance is very stable, no outliers and the min and max values of the quartiles are tight
+\subsection{Container benchmarks}
+Figure \ref{fig:container_benchmarks} shows the performance comparison of the benchmarks executed with different container solutions and the bare metal. The box plots demonstrate performance consistency between four repetitive executions of each benchmark. The deviation of the performance between the bare metal and containers is negligible. Only for ML solver, the benchmark executed within Charliecloud shows slightly higher elapsed time compared to other containers.
 
-% I will split this up in some smaller figures for it to fit better in column space. but in the meantime the text can be written already
 \begin{figure*}
 \centering
-\includegraphics[width=\textwidth]{images/container_benchmarks.png}
-\caption{Container technology benchmarks}
+\includegraphics[width=\textwidth]{images/2.png}
+\caption{Comparison of the elapsed time of the linear solvers between different container technologies and bare metal. Left plots: execution on one node. Middle plots: execution on two nodes. Right plots: execution on four plots.}
+\label{fig:container_benchmarks}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\includegraphics[width=\textwidth]{images/3.png}
+\caption{Comparison of the elapsed time of the linear solvers between different container technologies and bare metal. Left plots: execution on one node. Middle plots: execution on two nodes. Right plots: execution on four plots.}
+\label{fig:container_benchmarks}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\includegraphics[width=\textwidth/3]{images/1.png}
+\caption{Comparison of the elapsed time of the linear solvers between different container technologies and bare metal. Left plots: execution on one node. Middle plots: execution on two nodes. Right plots: execution on four plots.}
 \label{fig:container_benchmarks}
 \end{figure*}
 
 
+\subsection{Container technology in HPC}
+In figure \ref{fig:container_tech} the strengths and weaknesses of the evaluated container technologies are illustrated. This figure is based on an evaluation of nVidia \cite{nvidia-slurm-containers}. In this evaluation their own product Enroot came out with the best results. \todo{own interpretation needed of overview}We found the need to adjust x and y with a score of z because... Based on our summary in section \ref{introduction}, we support the other evaluation results of nVidia.
 
-\subsection{Container orchestrators}
+\begin{figure*}
+\centering
+\includegraphics[width=400px]{images/container_tech.png}
+\caption{Strenghts and weaknesses of Docker, Singularity, Charliecloud and Enroot}
+\label{fig:container_tech}
+\end{figure*}
+
+
+
+\subsection{Container orchestrators in HPC}
+\label{containers_hpc}
+In this section we will discuss the strengths and weakness of \gls{slurm} and Kubernetes in \gls{hpc}.
+
 Futral researched the performance differences of several batch schedulers, including \gls{slurm} and Kubernetes \cite{futral2019method}. The research's measurements were wall clock time, RAM usage, and CPU usage. These measurements captured the utilization of system resources for each of the schedulers. The batch jobs were composed of custom scripts, using the NASA Parallel Benchmark programs and computational fluid dynamics, which were executed using, 1, 2, and 4 servers to determine how well a scheduler scales with network growth. All hardware was similar and was co-located within the same data-center.
 
-Kubernetes performed less than \gls{slurm}. For instance, Kubernetes needed to determine if Weave-Net was the appropriate network plugin for the cluster before starting a container. This overhead resulted in a slower time-to-spool. Furthermore, Kubernetes did not perform well because the worker pods had to be first provisioned before a controller pod could be provisioned via the batch job. The batch job then had to perform a DNS lookup of the worker pods and then it would be forced to wait till the worker pods were available. Kubernetes also consumed the most RAM. Furthermore, the Kubernetes cluster also suffered from utilizing SSH for its communication protocol. In addition to SSH, the researcher's Kubernetes setup also relied on a virtual network and custom dynamic DNS solutions to determine worker node availability. The added layer of the virtual network and the DNS lookups significantly affected Kubernetes' its performance.
+Kubernetes performed less than \gls{slurm}. For instance, Kubernetes needed to determine if Weave-Net was the appropriate network plugin for the cluster before starting a container. This overhead resulted in a slower time-to-spool. Furthermore, Kubernetes did not perform well because the worker pods had to be first provisioned before a controller pod could be provisioned via the batch job. Kubernetes also consumed the most RAM. Furthermore, the Kubernetes cluster also suffered from utilizing SSH for its communication protocol. This was due to the extra overhead of encryption in SSH. \gls{slurm} does not use encryption, \gls{slurm} only authenticates communication with a shared secret (MUNGE). In addition to SSH, the Kubernetes setup also relied on a virtual network and custom dynamic DNS solutions to determine worker node availability. The added layer of the virtual network and the DNS lookups significantly affected Kubernetes' its performance. In \cite{futral2019method}, \gls{slurm} performed best and did not appear to require any optimizations in terms of additional configuration of the supporting OpenMPI libraries themselves.
 
-\gls{slurm} performed best and did not appear to require any optimizations in terms of additional configuration of the supporting OpenMPI libraries themselves.
+While Kubernetes does provide some batch job facilities, ease of development, and process isolation; the research concluded that it overall did not perform as well as expected. In conclusion, the data that was collected suggests that most batch schedulers are uniquely tuned to improve performance of high-performance compute jobs. This advanced tuning was especially pronounced in \gls{slurm}, and less pronounced with Kubernetes.
 
-While Kubernetes does provide some batch job facilities, ease of development, and process isolation; the researcher concluded that it did not perform as well as expected overall. In conclusion, the data that was collected suggests that most batch schedulers are uniquely tuned to improve performance of high-performance compute jobs. This advanced tuning was especially pronounced in \gls{slurm} and Portable Batch Scheduler, but was less pronounced with Kubernetes.
+``Embarrassingly parallel'', or ``perfectly parallel'' applications on a Kubernetes cluster can launch multiple containers in parallel, but the scale is ``best effort'' at launch time as ``gang scheduling'' is not possible; also it is not possible for the application to perform different functions on the ``primary'' container as the ``secondaries'', so sharding and setup must be performed either in advance or manually. This is not architecturally compatible with most existing applications \cite{hpc-on-kubernetes}. This makes a Kubernetes cluster not suitable as a tightly-coupled parallel solver as it cannot guarantee scale neither at launch nor at runtime.
 
-"Embarrassingly parallel", or "perfectly parallel" applications on a Kubernetes cluster can indeed launch multiple containers in parallel, but the scale is "best effort" at launch time as "gang scheduling" is not possible; also it is not possible for the application to perform different functions on the "primary" container as the "secondaries", so sharding and setup must be performed either in advance or manually. This is not architecturally compatible with most existing applications \cite{hpc-on-kubernetes}.
+Accelerated parallel training for AI on Kubernetes is not supported for the same reasons as for parallel solvers; alternative training workflows must be used (assuming framework support) when scale is needed. However, AI support for accelerated real-time analytics is supported. Assuming Kubernetes plugins exist for accelerated hardware, it may support these stacks.
 
-A Kubernetes cluster is not suitable as a tightly-coupled parallel solver as it cannot guarantee scale neither at launch nor at runtime, does not support “gang scheduling” to queue jobs until all parallel resources are available, does not automatically elect and run code on a "primary" node, and does not automatically configure fabric for applications.
+Many \gls{hpc} applications have specific requirements relative to where they are executed within the system. Where each task (rank) of an application may need to communicate with specific neighboring tasks and so prefer to be placed topologically close to these neighbors to improve communication with these neighbors. This is called topology-aware scheduling. Other tasks within the application may be sensitive to the performance of the I/O subsystem and as such may prefer to be placed in areas of the system where I/O throughput or response times are more favorable \cite{stackhpc-kubernetes-mpi}. As of writing this report, Kubernetes may only make this possible by manual scheduling containers on specific hosts in the cluster. In \gls{slurm} however, this is a builtin feature.
 
-Accelerated parallel training for AI is not supported for the same reasons as for parallel solvers; alternative training
-workflows must be used (assuming framework support) when scale is needed. However, AI support for accelerated real-time analytics is supported assuming Kubernetes plugins exist for accelerated hardware, it may support these stacks.
+\gls{slurm} also has builtin support for \gls{mpi} such as Intel-MPI, MPICH2, MVAPICH2, Open MPI, PMIx and UPC. \gls{mpi} use depends upon the type of \gls{mpi} being used. There are three fundamentally different modes of operation used by these various \gls{mpi} implementation. 1) \gls{slurm} directly launches the tasks and performs initialization of communications through the PMI2 or PMIx APIs. 2) \gls{slurm} creates a resource allocation for the job and then mpirun launches tasks using \gls{slurm}s infrastructure. And 3) \gls{slurm} creates a resource allocation for the job and then mpirun launches tasks using some mechanism other than \gls{slurm}, such as SSH or RSH. These tasks initiated outside of \gls{slurm}s monitoring or control \cite{slurm-pmi}.
 
-Many \gls{hpc} applications have specific requirements relative to where they are executed within the system. Where each task (rank) of an application may need to communicate with specific neighboring tasks and so prefer to be placed topologically close to these neighbors to improve communication with these neighbors. Other tasks within the application may be sensitive to the performance of the I/O subsystem and as such may prefer to be placed in areas of the system where I/O throughput or response times are more favorable \cite{stackhpc-kubernetes-mpi}.
+There are projects underway with the goal of integrating Kubernetes with \gls{mpi}. One notable approach, kube-openmpi, uses Kubernetes to launch a cluster of containers capable of supporting the target application set. Once this Kubernetes namespace is created, it is possible to use kubectl to launch and mpiexec applications into the namespace and leverage the deployed OpenMPI environment. kube-openmpi only supports OpenMPI, as the name suggests.
 
-There are projects underway with the goal of integrating Kubernetes with MPI. One notable approach, kube-openmpi, uses Kubernetes to launch a cluster of containers capable of supporting the target application set. Once this Kubernetes namespace is created, it is possible to use kubectl to launch and mpiexec applications into the namespace and leverage the deployed OpenMPI environment. kube-openmpi only supports OpenMPI, as the name suggests.
+Another framework, Kubeflow, also supports execution of MPI tasks atop Kubernetes. Kubeflow’s focus is evidence that the driving force for MPI-Kubernetes integration will be large-scale machine learning. Kubeflow uses a secondary scheduler within Kubernetes, named kube-batch, to support the scheduling and uses OpenMPI and a companion SSH daemon for the launch of \gls{mpi}-based jobs. Such approaches do not fully leverage the flexibility of the elastic Kubernetes infrastructure, or support the critical requirements of large-scale \gls{hpc} environments.
 
-Another framework, Kubeflow, also supports execution of MPI tasks atop Kubernetes. Kubeflow’s focus is evidence that the driving force for MPI-Kubernetes integration will be large-scale machine learning. Kubeflow uses a secondary scheduler within Kubernetes, kube-batch to support the scheduling and uses OpenMPI and a companion ssh daemon for the launch of MPI-based jobs. Such approaches do not fully leverage the flexibility of the elastic Kubernetes infrastructure, or support the critical requirements of large-scale HPC environments, as described above.
+In some respects, kube-openmpi is another example of the fixed use approach to the use of containers within \gls{hpc} environments. For the most part there have been two primary approaches. Either launch containers into a conventional \gls{hpc} environment using existing application launchers (e.g., Shifter, Singularity, etc.), or emulate a conventional data parallel \gls{hpc} environment atop a container deployment orchestrator with kube-openmpi.
 
-In some respects, kube-openmpi is another example of the fixed use approach to the use of containers within HPC environments. For the most part there have been two primary approaches. Either launch containers into a conventional HPC environment using existing application launchers (e.g., Shifter, Singularity, etc.), or emulate a conventional data parallel HPC environment atop a container deployment (à la kube-openmpi).
-
-Furthermore, Kubernetes 1.18 enables a new feature called Topology Manager \cite{gridengine-topology}. This is a component of Kubelet which also takes care of NUMA optimizations, which runs locally on the target host. Topology Manager provides a host local logic, which enables; 1) only host local decisions and 2) lead to wasted resources when pods needs to be re-scheduled many times to find a host which fits. The Topology Manager provides following allocation policies: none, best-effort, restricted, and single-numa-node. These are kubelet flags. The actual policy which is applied to the pod depends on the kubelet flag but also on the QoS class of the pod itself. The QoS class of the pod depends on the resource setting of the pod description. If CPU and memory are requested in the same way within the limits and requests section then the QoS class is guaranteed. Other QoS classes are BestEffort and Burstable. The kubelet calls so called Hint Providers for each container of the pod and then aligns them with the selected policy, like checking if it works well with single-numa-node policy. When set to restricted or single-numa-node it may terminate the pod when no placement if found so that the pod can be handled by external means (like rescheduling the pod).
+Kubernetes 1.18 enables a new feature called Topology Manager \cite{gridengine-topology}. This is a component of Kubelet which also takes care of NUMA optimizations, which runs locally on the target host. Topology Manager provides a host local logic, which enables; 1) only host local decisions and 2) lead to wasted resources when pods needs to be re-scheduled many times to find a host which fits. The Topology Manager provides following allocation policies: none, best-effort, restricted, and single-numa-node. These are kubelet flags. The actual policy which is applied to the pod depends on the kubelet flag but also on the QoS class of the pod itself. The QoS class of the pod depends on the resource setting of the pod description. If CPU and memory are requested in the same way within the limits and requests section then the QoS class is guaranteed. Other QoS classes are best-effort and burstable. The kubelet calls so called Hint Providers for each container of the pod and then aligns them with the selected policy, like checking if it works well with the single-numa-node policy. When set to restricted or single-numa-node it may terminate the pod when no placement is found so that the pod can be handled by external means (like rescheduling the pod).
 
 Some interesting development efforts and functionalities already in place for Kubernetes \cite{kubecon-2018}.
 \begin{itemize}
-    \item CRI-O lightweight container runtime + rootless usage
     \item CPU Pinning and Isolation
     \item Device Plugins (GPUs, Infiniband, FPGA, etc)
     \item NUMA Management
@@ -218,34 +246,30 @@ Some interesting development efforts and functionalities already in place for Ku
         \item Gvisor - Google sandboxed containers
     \end{itemize}
     \item Kubernetes cluster federation – for offloading on hybrid clouds
-    \item Kubeflow to make Machine Learning simple, portable and scalable
+    \item Kubeflow to make machine learning simple, portable and scalable
 \end{itemize}
 
-The Kubernetes blog provides several suggestions for HPC deployments \cite{kubernetes-blog-hpc}. 1) Maintain separate infrastructures. For sites with sunk investments in HPC, this may be a preferred approach. Rather than disrupt existing environments, it may be easier to deploy new containerized applications on a separate cluster and leave the HPC environment alone. The challenge is that this comes at the cost of siloed clusters, increasing infrastructure and management cost.
+The Kubernetes blog provides several suggestions for \gls{hpc} deployments \cite{kubernetes-blog-hpc}. 1) Maintain separate infrastructures. For sites with sunk investments in \gls{hpc}, this may be a preferred approach. Rather than disrupt existing environments, it may be easier to deploy new containerized applications on a separate cluster and leave the \gls{hpc} environment alone. The challenge is that this comes at the cost of siloed clusters, increasing infrastructure and management cost.
 
-2) Run containerized workloads under an existing HPC workload manager. For sites running traditional HPC workloads, another approach is to use existing job submission mechanisms to launch jobs that in turn instantiate containers on one or more target hosts. Sites using this approach can introduce containerized workloads with minimal disruption to their environment. Leading HPC workload managers such as Univa Grid Engine Container Edition and IBM Spectrum LSF are adding native support for containers. Shifter and Singularity are important open source tools supporting this type of deployment also. While this is a good solution for sites with simple requirements that want to stick with their HPC scheduler, they will not have access to native Kubernetes features, and this may constrain flexibility in managing long-running services where Kubernetes excels.
+2) For sites running traditional \gls{hpc} workloads, another approach is to use existing job submission mechanisms to launch jobs that in turn instantiate containers on one or more target hosts. Sites using this approach can introduce containerized workloads with minimal disruption to their environment. Leading \gls{hpc} workload managers such as Univa Grid Engine Container Edition and IBM Spectrum LSF are adding native support for containers. Shifter and Singularity are important open source tools supporting this type of deployment also. While this is a good solution for sites with simple requirements that want to stick with their \gls{hpc} scheduler, they will not have access to native Kubernetes features, and this may constrain flexibility in managing long-running services where Kubernetes excels.
 
-3) Use native job scheduling features in Kubernetes. Sites less invested in existing HPC applications can use existing scheduling facilities in Kubernetes for jobs that run to completion. While this is an option, it may be impractical for many HPC users. HPC applications are often either optimized towards massive throughput or large scale parallelism. In both cases startup and teardown latencies have a discriminating impact. Latencies that appear to be acceptable for containerized microservices today would render such applications unable to scale to the required levels.
+3) Use native job scheduling features in Kubernetes. Sites less invested in existing \gls{hpc} applications can use existing scheduling facilities in Kubernetes for jobs that run to completion. While this is an option, it may be impractical for many \gls{hpc} users. \gls{hpc} applications are often either optimized towards massive throughput or large scale parallelism. In both cases startup and teardown latencies have a discriminating impact. Latencies that appear to be acceptable for containerized microservices today would render such applications unable to scale to the required levels.
+
+An evaluation from nVidia provided
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{images/kube_vs_slurm.png}
+\caption{Strengths and weaknesses of SLURM and Kubernetes}
+\label{fig:kube_vs_slurm}
+\end{figure}
+
+In figure \ref{fig:kube_vs_slurm} the strengths and weaknesses of \gls{slurm} and Kubernetes are visualized. This figure is based on an evaluation from nVidia \cite{nvidia-slurm-containers}, and we support these findings based on sections \ref{introduction} and \ref{containers_hpc}.
 
 
 \section{Conclusion}
-Traditional HPC and Kubernetes Co-Existence Is it possible? Yes, but I wouldn’t recommend it on a shared HPC cluster \cite{cloudy-hutch}.
+Needles to say, what is generally needed in \gls{hpc} environments is high performance. Such as interconnect and GPU support, an unprivileged runtime for security, and for collaborating within the \gls{hpc} community, an OCI standardized format. Furthermore, the preservation of cgroups (as is used in \gls{slurm}), ease of use with \gls{mpi} workloads and the ability to modify containers for customization. The latter requires a setup like e.g. the fakeroot option in Singularity, or by using Buildah which allows unprivileged container builds. From the container technologies we tested, none really disappointed. In terms of performance there was no clear winner. All container technologies performed equally to bare metal performance. However, Enroot seems to have the best \gls{hpc} support, especially for GPU workloads. Charliecloud looks very promising either. Singularity however, seems to perform average in e.g. \ref{fig:container_tech}, but is nonetheless a strong choice. 
 
-While Kubernetes excels at orchestrating containers, \gls{hpc} applications can be tricky to deploy on Kubernetes \cite{kubenetes-blog-meets-hpc}.
-
-
-Kubernetes is not designed for \gls{hpc} hence it will never be as optimized as \gls{slurm}. However, In the effort to enable support of Big Data and Artificial Intelligence the software is being enhanced with functionalities that will eventually interest the \gls{hpc} community. Furthermore, the convergence of \gls{hpc} and Big Data will further motivate the usage of Kubernetes in \gls{hpc}.
-
-% SLURM NOTES
-
-% Advanced scheduling algorithms (fair-share, backfill, preemption, hierarchical quotas)
-% Gang scheduling: scheduling and starting all processes of a multi-node job simultaneously
-% Low runtime overhead
-% Topology-aware (NUMA/PCIe) job scheduling for better performance
-% Simple CLI with jobs as bash scripts
-% GPUs are a first-class resource
-% Supports interactive jobs
-% Slurm does not support containers out of the box... but is extensible through plugins
+Traditional \gls{hpc} and Kubernetes co-existence is possible. However, there should be a valid use case for such a more complex and expensive setup \cite{cloudy-hutch}. While Kubernetes excels at orchestrating containers, \gls{hpc} applications can be tricky to deploy on Kubernetes \cite{kubenetes-blog-meets-hpc}. Kubernetes is not designed for \gls{hpc}, hence it will never be as optimized as \gls{slurm}. However, in the effort to enable support of Big Data and Artificial Intelligence the software is being enhanced with functionalities that will eventually interest the \gls{hpc} community. Furthermore, the convergence of \gls{hpc} and Big Data may further motivate the usage of Kubernetes in \gls{hpc}.
 
 
 \newacronym{slurm}{SLURM}{Simple Linux Utility for Resource Management}
