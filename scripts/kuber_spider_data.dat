@@ -1,0 +1,6 @@
+Coontainers	"Scheduling/Fairshare"	"Resource management"	"GPU support"	"Topology awarnew"	"Low overhead"	"Plugin support"	"Container support"	"Accounting/\nMonitoring"
+Kubernetes	1	1	1	0	1	1	3	2
+
+
+Coontainers	"Scheduling/Fairshare"	"Resource management"	"GPU support"	"Topology awarnew"	"Low overhead"	"Plugin support"	"Container support"	"Accounting/\nMonitoring"
+SLURM		3	3	3	3	3	2	1	3

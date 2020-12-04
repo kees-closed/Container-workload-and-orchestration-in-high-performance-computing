@@ -1,0 +1,10 @@
+"Container type"	"Usage complexity"	"Set up complexity"	"Rootlessness"	"Low overhead"	"Weak isolation"	"GPU support"	"MPI support"	"SLURM integration"	"Security"	"Features"	"Support for \narchives"	"Support for \nrecipes"	"Cross-platform"
+Enroot          	1	3	4	5	5	5	3	5	4	2	1	0	0
+
+
+"Container type"	"Usage complexity"	"Set up complexity"	"Rootlessness"	"Low overhead"	"Weak isolation"	"GPU support"	"MPI support"	"SLURM integration"	"Security"	"Features"	"Support for \narchives"	"Support for \nrecipes"	"Cross-platform"
+Charliecloud    	2	3	5	5	5	2	4	0	4	1	5	5	0
+
+
+"Container type"	"Usage complexity"	"Set up complexity"	"Rootlessness"	"Low overhead"	"Weak isolation"	"GPU support"	"MPI support"	"SLURM integration"	"Security"	"Features"	"Support for \narchives"	"Support for \nrecipes"	"Cross-platform"
+Singularity     	2	2	2	5	1	4	4	0	3	4	5	5	4
