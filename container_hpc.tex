@@ -45,10 +45,6 @@ by\\[0.2cm]
 \end{center}
 \end{titlepage}
 
-\tableofcontents
-\newpage
-
-
 % \title{Container workload and orchestration in high performance computing}
 
 % \author{\IEEEauthorblockN{Kees de Jong, Maxim Masterov}
@@ -62,6 +58,10 @@ by\\[0.2cm]
 In e.g. federated \gls{hpc} infrastructures it is a challenge to maintain predictable software environments. Container technology offers the portability needed to keep work environments across different infrastructures consistent. With container technology there is also the question of orchestration. How, where and when are these containers deployed in a  (federated) cluster? \gls{slurm} is a resource manager that is used to schedule \gls{hpc} workloads and is used in about 60\% of the \gls{hpc} infrastructures in the TOP500. With \gls{slurm}, containers may be used in job scripts or with \gls{slurm} plugins to submit jobs, enabling the scheduling of HPC workloads with containers. In Cloud environments, Kubernetes is a popular container scheduler/orchestrator. This research investigated the pros and cons of several \gls{hpc} oriented container solutions. Singularity was evaluated as the best all-round fit. Furthermore, \gls{slurm} and Kubernetes were evaluated in the context of \gls{hpc} focused container schedulers, where it was clear that Kubernetes is making progress to better support \gls{hpc} workloads. However, \gls{slurm} is deemed the best all-round choice.
 \end{abstract}
 
+\newpage
+\tableofcontents
+\newpage
+
 % \begin{IEEEkeywords}
 % SLURM, Kubernetes, Singularity, Docker, HPC
 % \end{IEEEkeywords}
@@ -73,11 +73,11 @@ The use of containers in \gls{hpc} environments is gaining more popularity. Cont
 
 
 \subsection{Container technologies}
-Several \gls{hpc} oriented container technologies have been developed and the pros and cons will be briefly summarized in section \cite{hpc-workloads-justin, saha2018evaluation, stackhpc-state-of-hpc}.
+Several \gls{hpc} oriented container technologies have been developed and the pros and cons will be briefly summarized in this section. The conclusion are in part based on related work \cite{hpc-workloads-justin, saha2018evaluation, stackhpc-state-of-hpc}.
 
 
 \subsubsection{Singularity}
-One of the most popular \gls{hpc} oriented container solutions is Singularity. An estimated of 25,000+ systems are running Singularity like SURF, TACC, San Diego Supercomputer Center, and Oak Ridge National Laboratory. Root privileges are not required to run and build containers. This is made possible by the use of user namespaces, which maps the UID/GID of the root user inside the container, to an unprivileged ID outside of the container. However, with user namespaces enabled, the attack surface is widened \cite{rhel-cve}.
+One of the most popular \gls{hpc} oriented container solutions is Singularity. An estimated of 25,000+ systems are running Singularity at SURF, TACC, San Diego Supercomputer Center, and Oak Ridge National Laboratory. Root privileges are not required to run and build containers. This is made possible by the use of user namespaces, which maps the UID/GID of the root user inside the container, to an unprivileged ID outside of the container. However, with user namespaces enabled, the attack surface is widened \cite{rhel-cve}.
 
 Singularity uses \gls{sif} which is a single-image format, i.e. it does not use layers, unlike Docker. Since the \gls{oci} format supports multiple layers, they are often larger than the \gls{sif} format. \glspl{sif} are treated like a binary executable. And thus are easy to use in \gls{hpc} batch scripts. However, Singularity also supports the conversion from the \gls{oci} format to \gls{sif}, which in effect allows using Docker images. Furthermore, the project enjoys active development from a broad community.
 
@@ -324,7 +324,7 @@ Accelerated parallel training for AI on Kubernetes is not supported for the same
 Many \gls{hpc} applications have specific requirements relative to where they are executed within the system. Where each task (rank) of an application may need to communicate with specific neighboring tasks and so prefer to be placed topologically close to these neighbors to improve communication with these neighbors. This is called topology-aware scheduling. Other tasks within the application may be sensitive to the performance of the I/O subsystem and as such may prefer to be placed in areas of the system where I/O throughput or response times are more favorable \cite{stackhpc-kubernetes-mpi}. As of writing this report, Kubernetes may only make this possible by manual scheduling containers on specific hosts in the cluster. In \gls{slurm} however, this is a builtin feature.
 
 \subsubsection{MPI support}
-\gls{slurm} also has builtin support for \gls{mpi} such as Intel-MPI, MPICH2, MVAPICH2, Open MPI, PMIx and UPC. \gls{mpi} use depends upon the type of \gls{mpi} being used. There are three fundamentally different modes of operation used by these various \gls{mpi} implementation. 1) \gls{slurm} directly launches the tasks and performs initialization of communications through the PMI2 or PMIx APIs. 2) \gls{slurm} creates a resource allocation for the job and then mpirun launches tasks using \gls{slurm}s infrastructure. And 3) \gls{slurm} creates a resource allocation for the job and then mpirun launches tasks using some mechanism other than \gls{slurm}, such as SSH or RSH. These tasks are then initiated outside of \gls{slurm}s monitoring or control \cite{slurm-pmi}.
+\gls{slurm} also has builtin support for \gls{mpi} such as Intel-MPI, MPICH2, MVAPICH2, OpenMPI, PMIx and UPC. \gls{mpi} use depends upon the type of \gls{mpi} being used. There are three fundamentally different modes of operation used by these various \gls{mpi} implementation. 1) \gls{slurm} directly launches the tasks and performs initialization of communications through the PMI2 or PMIx APIs. 2) \gls{slurm} creates a resource allocation for the job and then mpirun launches tasks using \gls{slurm}s infrastructure. And 3) \gls{slurm} creates a resource allocation for the job and then mpirun launches tasks using some mechanism other than \gls{slurm}, such as SSH or RSH. These tasks are then initiated outside of \gls{slurm}s monitoring or control \cite{slurm-pmi}.
 
 There are projects underway with the goal of integrating Kubernetes with \gls{mpi}. One notable approach, kube-openmpi, uses Kubernetes to launch a cluster of containers capable of supporting the target application set. Once this Kubernetes namespace is created, it is possible to use kubectl to launch and mpiexec applications into the namespace and leverage the deployed OpenMPI environment. kube-openmpi only supports OpenMPI, as the name suggests.
 
@@ -354,7 +354,7 @@ Kubernetes 1.18 enables a new feature called Topology Manager \cite{gridengine-t
 \end{itemize}
 
 \subsubsection{Infrastructure deployment methods}
-The Kubernetes blog provides several suggestions for \gls{hpc} deployments \cite{kubernetes-blog-hpc}. 1) Maintain separate infrastructures. For sites with sunk investments in \gls{hpc}, this may be a preferred approach. Rather than disrupt existing environments, it may be easier to deploy new containerized applications on a separate cluster and leave the \gls{hpc} environment untouched. The challenge is that this comes at the cost of siloed clusters, increasing infrastructure and management cost.
+The Kubernetes blog provides several suggestions for \gls{hpc} deployments \cite{kubenetes-blog-meets-hpc}. 1) Maintain separate infrastructures. For sites with sunk investments in \gls{hpc}, this may be a preferred approach. Rather than disrupt existing environments, it may be easier to deploy new containerized applications on a separate cluster and leave the \gls{hpc} environment untouched. The challenge is that this comes at the cost of siloed clusters, increasing infrastructure and management cost.
 
 2) For sites running traditional \gls{hpc} workloads, another approach is to use existing job submission mechanisms to launch jobs that in turn instantiate containers on one or more target hosts. Sites using this approach can introduce containerized workloads with minimal disruption to their environment. Leading \gls{hpc} workload managers such as Univa Grid Engine Container Edition and IBM Spectrum LSF are adding native support for containers. Shifter and Singularity are important open source tools supporting this type of deployment also. While this is a good solution for sites with simple requirements that want to stick with their \gls{hpc} scheduler, they will not have access to native Kubernetes features, and this may constrain flexibility in managing long-running services where Kubernetes excels.
 
@@ -377,7 +377,7 @@ In figure \ref{fig:kube_vs_slurm} the strengths and weaknesses of \gls{slurm} an
 
 
 \section{Conclusion}
-Needles to say, what is generally needed in \gls{hpc} environments is high performance. Such as interconnect and GPU support, an unprivileged runtime for security, and for collaborating within the \gls{hpc} community, an OCI standardized format. Furthermore, the preservation of cgroups (as is used in \gls{slurm}), ease of use with \gls{mpi} workloads and the ability to modify containers for customization. The latter requires a setup like e.g. the fakeroot option in Singularity, or by using Buildah which allows unprivileged container builds.
+In this research report we evaluated container technologies and orchestrators in the context of \gls{hpc}. Container usage in \gls{hpc} has some unique requirements. Such as interconnect and GPU support, an unprivileged runtime for security, and for collaborating within the \gls{hpc} community, an OCI standardized format. Furthermore, the preservation of cgroups (as is used in \gls{slurm}), ease of use with \gls{mpi} workloads and the ability to modify containers for customization. The latter requires a setup like e.g. the fakeroot option in Singularity, or by using Buildah which allows unprivileged container builds.
 
 From the container technologies we tested and evaluated, none really disappointed. In terms of performance there was no clear winner. All container technologies performed equally to bare metal performance. However, Singularity and enroot have the best overall \gls{hpc} support (Figure \ref{fig:container_tech}). Where enroot especially excels for (nVidia) GPU workloads. Charliecloud looks very promising as well.
 
