@@ -73,7 +73,7 @@ The use of containers in \gls{hpc} environments is gaining more popularity. Cont
 
 
 \subsection{Container technologies}
-Several \gls{hpc} oriented container technologies have been developed and the pros and cons will be briefly summarized in section \cite{hpc-workloads-justin, saha2018evaluation, stackhpc-state-of-hpc}.
+Several \gls{hpc} oriented container technologies have been developed and the pros and cons will be briefly summarized in this section. The conclusion are in part based on related work \cite{hpc-workloads-justin, saha2018evaluation, stackhpc-state-of-hpc}.
 
 
 \subsubsection{Singularity}
@@ -377,7 +377,7 @@ In figure \ref{fig:kube_vs_slurm} the strengths and weaknesses of \gls{slurm} an
 
 
 \section{Conclusion}
-Needles to say, what is generally needed in \gls{hpc} environments is high performance. Such as interconnect and GPU support, an unprivileged runtime for security, and for collaborating within the \gls{hpc} community, an OCI standardized format. Furthermore, the preservation of cgroups (as is used in \gls{slurm}), ease of use with \gls{mpi} workloads and the ability to modify containers for customization. The latter requires a setup like e.g. the fakeroot option in Singularity, or by using Buildah which allows unprivileged container builds.
+In this research report we evaluated container technologies and orchestrators in the context of \gls{hpc}. Container usage in \gls{hpc} has some unique requirements. Such as interconnect and GPU support, an unprivileged runtime for security, and for collaborating within the \gls{hpc} community, an OCI standardized format. Furthermore, the preservation of cgroups (as is used in \gls{slurm}), ease of use with \gls{mpi} workloads and the ability to modify containers for customization. The latter requires a setup like e.g. the fakeroot option in Singularity, or by using Buildah which allows unprivileged container builds.
 
 From the container technologies we tested and evaluated, none really disappointed. In terms of performance there was no clear winner. All container technologies performed equally to bare metal performance. However, Singularity and enroot have the best overall \gls{hpc} support (Figure \ref{fig:container_tech}). Where enroot especially excels for (nVidia) GPU workloads. Charliecloud looks very promising as well.
 
