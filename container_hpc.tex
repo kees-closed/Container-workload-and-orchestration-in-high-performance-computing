@@ -77,7 +77,7 @@ Several \gls{hpc} oriented container technologies have been developed and the pr
 
 
 \subsubsection{Singularity}
-One of the most popular \gls{hpc} oriented container solutions is Singularity. An estimated of 25,000+ systems are running Singularity at SURF, TACC, San Diego Supercomputer Center, and Oak Ridge National Laboratory. Root privileges are not required to run and build containers. This is made possible by the use of user namespaces, which maps the UID/GID of the root user inside the container, to an unprivileged ID outside of the container. However, with user namespaces enabled, the attack surface is widened \cite{rhel-cve}.
+One of the most popular \gls{hpc} oriented container solutions is Singularity. An estimated of 25,000+ systems are running Singularity at e.g. SURF, TACC, San Diego Supercomputer Center, and Oak Ridge National Laboratory. Root privileges are not required to run and build containers. This is made possible by the use of user namespaces, which maps the UID/GID of the root user inside the container, to an unprivileged ID outside of the container. However, with user namespaces enabled, the attack surface is widened \cite{rhel-cve}.
 
 Singularity uses \gls{sif} which is a single-image format, i.e. it does not use layers, unlike Docker. Since the \gls{oci} format supports multiple layers, they are often larger than the \gls{sif} format. \glspl{sif} are treated like a binary executable. And thus are easy to use in \gls{hpc} batch scripts. However, Singularity also supports the conversion from the \gls{oci} format to \gls{sif}, which in effect allows using Docker images. Furthermore, the project enjoys active development from a broad community.
 
