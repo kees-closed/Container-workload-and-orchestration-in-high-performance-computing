@@ -38,7 +38,7 @@
 by\\[0.2cm]
 \textsc{\Large Kees de Jong \& Maxim Masterov}\\[0.2cm]
 
-{\Large \today}\\[1cm]
+{\Large December 2, 2020}\\[1cm]
 
 \vfill
 
@@ -90,6 +90,8 @@ Therefore, allowing users to run Docker containers on a multi-user host with sha
 Saha et al. researched the performance of Docker and Singularity in \gls{hpc} \cite{saha2018evaluation}. The researchers presented 1) a performance evaluation of Docker and Singularity on bare metal nodes in the Chameleon cloud 2) a mechanism by which Docker containers can be mapped with InfiniBand hardware with \gls{rdma} communication and 3) an analysis of mapping elements of parallel workloads to the containers for optimal resource management with container-ready orchestration tools. They evaluated Docker and Singularity as follows; Singularity is designed to use the underlying \gls{hpc} runtime environment for executing \gls{mpi} applications, whereas Docker is designed to isolate the runtime environment from the host. Also, Singularity focuses on coarse-grained resource allocation whereas Docker can take advantage of the fine-grained allocation of resources per rank.
 
 The researcher's performance analysis showed that scientific workloads for both Docker and Singularity based containers can achieve near-native performance. Singularity is designed specifically for \gls{hpc} workloads. However, Docker still has advantages over Singularity for use in Clouds as it provides overlay networking and an intuitive way to run \gls{mpi} applications with one container per rank for fine-grained resources allocation. Both Docker and Singularity make it possible to directly use the underlying network fabric from the containers for coarse grained resource. However, unlike Singularity, a Docker container needs to have InfiniBand interconnect drivers installed and mapped inside the container to enable fast communication. Furthermore, for \gls{mpi} applications, splitting ranks per container with restricted resources to each container can be employed by Docker. This option is not available in Singularity containers.
+
+After this report was already finalized, Docker 20.10 was released \cite{medium-docker} which solved many of the security concerns expressed in this subsection. These new features have not been taken into consideration because this research was already closed by the time Docker 20.10 was released.
 
 
 \subsubsection{udocker}
@@ -154,7 +156,7 @@ The following research questions are formulated and tested. How do these contain
 
 
 \section{Method}
-In order to answer the research question from section \ref{research-question}, we tested three linear solvers from PETSc library \cite{PETSc2020overview}: CG, BiCGSStab and ML. The linear solvers were applied to a standard 3D Poisson problem with 7-point stencil and $500^3$ Degrees of Freedom (DoF). The chosen linear solvers cover the most frequently used algebraic operations from the back-ends of most scientific codes. Among many, the most important operations are dot product, matrix-vector product, vector update, and matrix-matrix multiplication. By choosing these linear solvers, we intended to cover the majority of the possible use cases from fields like Computational Fluid Dynamics, Mechanical Engineering, Astrophysics, Machine Learning, and many others.
+In order to answer the research question from section \ref{research-question}, we tested three linear solvers from PETSc library \cite{PETSc2020overview}: CG, BiCGSStab and AMG. The linear solvers were applied to a standard 3D Poisson problem with 7-point stencil and $500^3$ Degrees of Freedom (DoF). The chosen linear solvers cover the most frequently used algebraic operations from the back-ends of most scientific codes. Among many, the most important operations are dot product, matrix-vector product, vector update, and matrix-matrix multiplication. By choosing these linear solvers, we intended to cover the majority of the possible use cases from fields like Computational Fluid Dynamics, Mechanical Engineering, Astrophysics, Machine Learning, and many others.
 
 Every test was executed on 1, 2 and 4 nodes with 24 MPI tasks per node with hyperthreading switched off. To determine the deviation of the performance, every test was repeated four times. Table \ref{tab:lib_verions} shows versions of the libraries and compilers used during the tests in the bare metal case and inside the containers.
 \begin{table}[H]
@@ -180,7 +182,7 @@ In this section the container benchmark results are evaluated. The container orc
 \subsection{Container benchmarks}
 Figure \ref{fig:container_benchmarks} shows the performance comparison of the benchmarks executed with different container solutions and the bare metal. The box plots demonstrate performance consistency between four repetitive executions of each benchmark.
 
-On four nodes, the deviation of the performance between the bare metal and containers is rather negligible at the reported time scales. However, on one and two nodes, the containers demonstrate slightly better performance compared to the bare metal. This can be related to the better resource isolation in the containers and to the interference of the background processes on the bare metal system. With the exception of the ML solver, the test performed in Charliecloud shows slightly higher elapsed time compared to other containers. This might be an indicator of the additional constraints imposed by Charliecloud on network communication.
+On four nodes, the deviation of the performance between the bare metal and containers is rather negligible at the reported time scales. However, on one and two nodes, the containers demonstrate slightly better performance compared to the bare metal. One of the reasons for the performance deviation can be attributed to different versions of the GCC compiler and PETSc library used on bare metal and in containers. Another reason can be related to the better resource isolation in the containers and to the interference of the background processes on the bare metal system. With the exception of the AMG solver, the test performed in Charliecloud shows slightly higher elapsed time compared to other containers. This might be an indicator of the additional constraints imposed by Charliecloud on network communication.
 
 \begin{figure}[H]
 \centering
@@ -382,6 +384,10 @@ In this research report we evaluated container technologies and orchestrators in
 From the container technologies we tested and evaluated, none really disappointed. In terms of performance there was no clear winner. All container technologies performed equally to bare metal performance. However, Singularity and enroot have the best overall \gls{hpc} support (Figure \ref{fig:container_tech}). Where enroot especially excels for (nVidia) GPU workloads. Charliecloud looks very promising as well.
 
 Traditional \gls{hpc} and Kubernetes co-existence is possible. However, there should be a valid use case for such a more complex and expensive setup \cite{cloudy-hutch}. While Kubernetes excels at orchestrating containers, containerized \gls{hpc} applications can be tricky to deploy on Kubernetes \cite{kubenetes-blog-meets-hpc}. Kubernetes is not designed for \gls{hpc}, hence it will never be as optimized as \gls{slurm}. However, in the effort to enable support of Big Data and Artificial Intelligence, Kubernetes is being enhanced with functionalities that will eventually interest the \gls{hpc} community. Furthermore, the trend of convergence between \gls{hpc} and Big Data may further motivate the usage of Kubernetes in \gls{hpc} in the future.
+
+
+% \section{Future work}
+% Based on the findings of this research report we acknowledge the following subject for further research.
 
 
 \newacronym{slurm}{SLURM}{Simple Linux Utility for Resource Management}
