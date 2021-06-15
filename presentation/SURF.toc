@@ -1,9 +1,0 @@
-\beamer@sectionintoc {1}{Section no.1}{3}{0}{1}
-\beamer@subsectionintoc {1}{1}{Subsection no.1.1 }{5}{0}{1}
-\beamer@sectionintoc {2}{Section no. 2}{6}{0}{2}
-\beamer@subsectionintoc {2}{1}{Lists I}{7}{0}{2}
-\beamer@subsectionintoc {2}{2}{Lists II}{16}{0}{2}
-\beamer@sectionintoc {3}{Section no.3}{25}{0}{3}
-\beamer@subsectionintoc {3}{1}{Tables}{26}{0}{3}
-\beamer@sectionintoc {4}{Section no. 4}{30}{0}{4}
-\beamer@subsectionintoc {4}{1}{blocs}{31}{0}{4}
